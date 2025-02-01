@@ -105,6 +105,38 @@ Resources:
       DeploymentId: !Ref WebSocketDeployment
       AutoDeploy: true
 
+  WebsocketFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.umaxcode.StreamLambdaHandler::handleRequest
+      Runtime: java21
+      MemorySize: 512
+      Timeout: 30
+      CodeUri: .
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - execute-api:ManageConnections
+              Resource: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*
+      Environment:
+        Variables:
+          API_GATEWAY_WEBSOCKET_ENDPOINT: !Join
+            - ""
+            - - "https://"
+              - !Ref WebSocketApi
+              - ".execute-api."
+              - !Ref "AWS::Region"
+              - ".amazonaws.com/"
+              - !Ref WebSocketStage
+      Events:
+        ProxyResource:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: any
+
 Outputs:
   WebSocketApiUrl:
     Description: "WebSocket API URL"
