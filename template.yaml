@@ -16,11 +16,10 @@ Resources:
       ApiId: !Ref WebSocketApi
       RouteKey: $connect
       AuthorizationType: NONE
-      OperationName: ConnectRoute
       Target: !Join
         - /
         - - integrations
-          - !Ref ConnectIntegration
+          - !Ref WebSocketIntegration
 
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -28,11 +27,10 @@ Resources:
       ApiId: !Ref WebSocketApi
       RouteKey: $disconnect
       AuthorizationType: NONE
-      OperationName: DisconnectRoute
       Target: !Join
         - /
         - - integrations
-          - !Ref DisconnectIntegration
+          - !Ref WebSocketIntegration
 
   WebSocketIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -50,6 +48,9 @@ Resources:
       Timeout: 30
       CodeUri: .
       Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+              TableName: WebSocketConnections
         - Statement:
             - Effect: Allow
               Action:
@@ -82,6 +83,11 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketApi
       Description: WebSocket API Deployment
+    DependsOn:
+      - ConnectRoute
+      - DisconnectRoute
+      - WebSocketIntegration
+
 
   WebSocketStage:
     Type: AWS::ApiGatewayV2::Stage
